@@ -27,7 +27,6 @@ object FakeDevice {
     fun fake(lpparam: XC_LoadPackage.LoadPackageParam) {
         XLog.d(TAG, "fake() called with: packageName = ${lpparam.packageName}, processName = ${lpparam.processName}")
 
-        // 忽略 WebView
         if (lpparam.packageName == "com.google.android.webview") {
             XLog.d(TAG, "ignore ${lpparam.packageName}")
             return
@@ -37,13 +36,11 @@ object FakeDevice {
 
         fakes.forEach { clazz ->
             try {
-                // ❗过滤非法类（核心修复）
                 if (Modifier.isAbstract(clazz.modifiers) || clazz.isInterface) {
-                    XLog.e(TAG, "Skip abstract/interface: $clazz")
+                    XLog.e(TAG, "Skip abstract/interface: $clazz", RuntimeException("Invalid class"))
                     return@forEach
                 }
 
-                // ❗安全实例化（替换 newInstance）
                 val instance = try {
                     clazz.getDeclaredConstructor().newInstance()
                 } catch (e: Throwable) {
@@ -58,7 +55,6 @@ object FakeDevice {
             }
         }
 
-        // 其他 hook（加保护）
         try {
             fakeOthers(lpparam)
         } catch (t: Throwable) {
