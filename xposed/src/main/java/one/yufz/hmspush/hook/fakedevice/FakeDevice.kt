@@ -27,6 +27,14 @@ object FakeDevice {
     fun fake(lpparam: XC_LoadPackage.LoadPackageParam) {
         XLog.d(TAG, "fake() called with: packageName = ${lpparam.packageName}, processName = ${lpparam.processName}")
 
+        // ==================== 核心修复：跳过自身模块 ====================
+        if (lpparam.packageName == "one.yufz.hmspush") {
+            XLog.d(TAG, "Skip FakeDevice for self module: one.yufz.hmspush")
+            fakeOthers(lpparam)   // 仍然执行必要的通用 Hook（如设备ID、签名）
+            return
+        }
+
+        // 忽略 WebView
         if (lpparam.packageName == "com.google.android.webview") {
             XLog.d(TAG, "ignore ${lpparam.packageName}")
             return
@@ -36,25 +44,29 @@ object FakeDevice {
 
         fakes.forEach { clazz ->
             try {
+                // 过滤抽象类和接口
                 if (Modifier.isAbstract(clazz.modifiers) || clazz.isInterface) {
-                    XLog.e(TAG, "Skip abstract/interface: $clazz", RuntimeException("Invalid class"))
+                    XLog.d(TAG, "Skip abstract/interface: $clazz")
                     return@forEach
                 }
 
+                // 安全实例化（防止构造失败）
                 val instance = try {
                     clazz.getDeclaredConstructor().newInstance()
                 } catch (e: Throwable) {
-                    XLog.e(TAG, "Create instance failed: $clazz", e)
+                    XLog.e(TAG, "Create instance failed for: $clazz", e)
                     null
                 }
 
                 instance?.fake(lpparam)
 
             } catch (t: Throwable) {
-                XLog.e(TAG, "FakeDevice exec failed: $clazz", t)
+                // 更友好的错误处理，不会导致整个 fake() 崩溃
+                XLog.e(TAG, "FakeDevice exec failed for class: $clazz in package: ${lpparam.packageName}", t)
             }
         }
 
+        // 执行其他通用 Hook（加保护）
         try {
             fakeOthers(lpparam)
         } catch (t: Throwable) {
