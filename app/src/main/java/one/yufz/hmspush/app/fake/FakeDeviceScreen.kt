@@ -5,6 +5,7 @@ package one.yufz.hmspush.app.fake
 import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -16,16 +17,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -82,7 +85,7 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
         )
     }
     if (state.showZygiskTips) {
-        TipsDialog(onDismissRequest = { viewModel.dismissZygiskTips() })
+        TipsDialog(state.zygiskEnabled, onDismissRequest = { viewModel.dismissZygiskTips() })
     }
 
     Scaffold(
@@ -98,8 +101,8 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
                     if (!searching) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(text = stringResource(id = R.string.fake_device))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Tips {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Tips(state.zygiskEnabled) {
                                 viewModel.showZygiskTips()
                             }
                         }
@@ -139,18 +142,19 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
 }
 
 @Composable
-private fun Tips(requestShowTips: () -> Unit) {
-    IconButton(
-        onClick = {
+private fun Tips(zygiskEnabled: Boolean, requestShowTips: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(4.dp),
+        color = if (zygiskEnabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
+        contentColor = if (zygiskEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+        modifier = Modifier.clickable {
             requestShowTips()
         }
     ) {
-        Icon(
-            modifier = Modifier
-                .size(24.dp)
-                .padding(all = 2.dp),
-            imageVector = Icons.Outlined.Info,
-            contentDescription = "tips"
+        Text(
+            text = if (zygiskEnabled) stringResource(R.string.hmspush_zygisk_installed) else stringResource(R.string.hmspush_zygisk_not_install),
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
         )
     }
 }

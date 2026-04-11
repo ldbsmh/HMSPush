@@ -17,9 +17,12 @@ import de.charlex.compose.HtmlText
 import one.yufz.hmspush.R
 
 @Composable
-fun TipsDialog(onDismissRequest: () -> Unit) {
+fun TipsDialog(zygiskEnabled: Boolean, onDismissRequest: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
+        title = {
+            Text(if (zygiskEnabled) stringResource(R.string.hmspush_zygisk_installed) else stringResource(R.string.hmspush_zygisk_not_install))
+        },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 HtmlText(
