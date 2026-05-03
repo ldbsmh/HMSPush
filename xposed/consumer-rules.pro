@@ -9,3 +9,7 @@
 -keep class com.huawei.android.app.NotificationManagerEx{
     *;
 }
+
+-keep class * implements one.yufz.hmspush.hook.fakedevice.IFakeDevice {
+    <init>(...);
+}
