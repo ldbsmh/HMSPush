@@ -69,10 +69,12 @@
         Using Zygisk to spoof the device may help bypass detection of hooking environments by some applications.
         <br/>
         <br/>
-        You must install the <a href="https://github.com/fei-ke/HmsPushZygisk">HmsPushZygisk</a> module.
+        Module download link: <a href="https://github.com/fei-ke/HmsPushZygisk">HmsPushZygisk</a>
         <br/>
         <br/>
         Note: You must grant ROOT access to the HMSPush application.
         ]]>
     </string>
+    <string name="hmspush_zygisk_installed">Zygisk</string>
+    <string name="hmspush_zygisk_not_install">Zygisk 模块未安装</string>
 </resources>

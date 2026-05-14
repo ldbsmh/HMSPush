@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,6 +69,7 @@ import one.yufz.hmspush.app.nav.LocalNavigator
 import one.yufz.hmspush.app.widget.LoadingDialog
 import one.yufz.hmspush.app.widget.SearchBar
 import one.yufz.hmspush.app.workaround.mavericksViewModel
+import one.yufz.xposed.set
 
 @Composable
 fun IconScreen(iconViewModel: IconViewModel = mavericksViewModel()) {
@@ -216,6 +218,7 @@ fun IconScreen(iconViewModel: IconViewModel = mavericksViewModel()) {
 fun MoreMenu(showMoreMenu: Boolean, onDismissRequest: () -> Unit) {
     var showImportDialog by remember { mutableStateOf(false) }
     val iconViewModel: IconViewModel = mavericksViewModel()
+    val state by iconViewModel.collectAsState()
     DropdownMenu(expanded = showMoreMenu, onDismissRequest = onDismissRequest, modifier = Modifier.defaultMinSize(minWidth = 160.dp)) {
         DropdownMenuItem(
             text = {
@@ -239,6 +242,7 @@ fun MoreMenu(showMoreMenu: Boolean, onDismissRequest: () -> Unit) {
 
     if (showImportDialog) {
         ImportFromUrlDialog(
+            initUrl = state.customIconUrl,
             onConfirm = {
                 iconViewModel.fetchIconFromUrl(it)
             },
@@ -265,9 +269,8 @@ fun InfoDialog(info: String, onDismissRequest: () -> Unit) {
 }
 
 @Composable
-fun ImportFromUrlDialog(onConfirm: (String) -> Unit, onDismissRequest: () -> Unit) {
-    var textState by remember { mutableStateOf(TextFieldValue(IconViewModel.ICON_URL)) }
-
+fun ImportFromUrlDialog(initUrl: String, onConfirm: (String) -> Unit, onDismissRequest: () -> Unit) {
+    var textState by remember(initUrl) { mutableStateOf(TextFieldValue(text = initUrl)) }
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {

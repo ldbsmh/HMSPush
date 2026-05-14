@@ -3,14 +3,12 @@ package one.yufz.hmspush.app.icon
 import com.airbnb.mvrx.MavericksState
 import com.airbnb.mvrx.MavericksViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import one.yufz.hmspush.R
 import one.yufz.hmspush.app.App
 import one.yufz.hmspush.app.HmsPushClient
+import one.yufz.hmspush.app.prefs.AppPrefs
 import one.yufz.hmspush.common.IconData
 import org.json.JSONArray
 import org.json.JSONObject
@@ -19,7 +17,8 @@ import java.net.URL
 data class IconState(
     val icons: List<IconData> = emptyList(),
     val filterKeywords: String = "",
-    val importState: IconViewModel.ImportState = IconViewModel.ImportState(false)
+    val importState: IconViewModel.ImportState = IconViewModel.ImportState(false),
+    val customIconUrl: String = "",
 ) : MavericksState {
     val filteredIcons: List<IconData>
         get() = if (filterKeywords.isEmpty()) icons else icons.filter {
@@ -30,19 +29,24 @@ data class IconState(
 class IconViewModel(initialState: IconState) : MavericksViewModel<IconState>(initialState) {
     companion object {
         private const val TAG = "IconViewModel"
-        const val ICON_URL = "https://raw.githubusercontent.com/fankes/AndroidNotifyIconAdapt/main/APP/NotifyIconsSupportConfig.json"
     }
 
     data class ImportState(val loading: Boolean, val info: String? = null)
 
     private val app = App.instance
+    private val appPrefs = AppPrefs(app)
 
     init {
         loadIcon()
+        viewModelScope.launch(Dispatchers.IO) {
+            val customIconUrl = appPrefs.customIconUrl
+            setState { copy(customIconUrl = customIconUrl) }
+        }
     }
 
     fun fetchIconFromUrl(url: String) {
         viewModelScope.launch(Dispatchers.IO) {
+            appPrefs.customIconUrl = url
             setState { copy(importState = ImportState(true)) }
 
             try {
