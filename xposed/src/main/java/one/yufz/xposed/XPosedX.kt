@@ -135,8 +135,9 @@ fun <T> Any.setField(name: String, value: T?, fieldClass: Class<T>) {
     val obj = if (this is Class<*>) null else this
     val thisClass = if (this is Class<*>) this else this.javaClass
 
-    val field = findField(thisClass, name)
-
+    val field = findField(thisClass, name).apply {
+        isAccessible = true
+    }
     when (fieldClass) {
         Boolean::class.java -> field.setBoolean(obj, value as Boolean)
         Byte::class.java -> field.setByte(obj, value as Byte)
