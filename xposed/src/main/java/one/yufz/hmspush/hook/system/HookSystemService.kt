@@ -10,6 +10,7 @@ import one.yufz.hmspush.common.ANDROID_PACKAGE_NAME
 import one.yufz.hmspush.common.IS_SYSTEM_HOOK_READY
 import one.yufz.hmspush.hook.XLog
 import one.yufz.xposed.callMethod
+import one.yufz.xposed.callStaticMethod
 import one.yufz.xposed.deoptimizeMethod
 import one.yufz.xposed.get
 import one.yufz.xposed.hook
@@ -21,8 +22,8 @@ class HookSystemService {
 
         val isSystemHookReady: Boolean by lazy {
             try {
-                val nm = AndroidAppHelper.currentApplication().getSystemService(NotificationManager::class.java)
-                nm.callMethod("isSystemConditionProviderEnabled", IS_SYSTEM_HOOK_READY) as Boolean
+                val nm = NotificationManager::class.java.callStaticMethod("getService")
+                nm?.callMethod("isSystemConditionProviderEnabled", IS_SYSTEM_HOOK_READY) as Boolean
             } catch (t: Throwable) {
                 XLog.e(TAG, "isSystemHookReady error", t)
                 false
