@@ -22,9 +22,14 @@ object FakeDevice {
         "com.tencent.tmgp.sgame" to arrayOf(XGPush::class.java),
     )
 
+    private val ignoredFakePackage = setOf(
+        "com.google.android.webview",
+        "app.grapheneos.gmscompat.lib",
+    )
+
     fun fake(lpparam: XC_LoadPackage.LoadPackageParam) {
         XLog.d(TAG, "fake() called with: packageName = ${lpparam.packageName}, processName = ${lpparam.processName}")
-        if (lpparam.packageName == "com.google.android.webview") {
+        if (lpparam.packageName in ignoredFakePackage) {
             XLog.d(TAG, "fake() called, ignore ${lpparam.packageName}")
             return
         }
