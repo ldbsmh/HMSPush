@@ -18,6 +18,7 @@ import one.yufz.xposed.HookCallback
 import one.yufz.xposed.HookContext
 import one.yufz.xposed.hook
 import one.yufz.xposed.hookMethod
+import one.yufz.xposed.callMethod
 
 object NmsPermissionHooker {
     private const val TAG = "NmsPermissionHooker"
@@ -52,8 +53,8 @@ object NmsPermissionHooker {
         }
     }
 
-    private fun getPackageUid(packageName: String, userId: Int = 0) =
-        getContext().packageManager.getPackageUidAsUser(packageName, userId)
+    private fun getPackageUid(packageName: String, userId: Int = 0): Int =
+        getContext().packageManager.callMethod("getPackageUidAsUser", packageName, userId) as Int
 
     private fun getContext(): Context = AndroidAppHelper.currentApplication()
 
