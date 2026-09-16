@@ -30,10 +30,14 @@ object NmsPermissionHooker {
      * the complete uid makes the permission bypass silently not match and the
      * framework then throws STATUS_BAR_SERVICE SecurityException.
      */
+    // UserHandle.getAppId() is hidden and is not available to the SDK compiler.
+    // Android reserves the lower 100000 UID values for the application id.
+    private fun appId(uid: Int): Int = uid % 100000
+
     private fun fromHms() = try {
         val callingUid = Binder.getCallingUid()
         val hmsUid = getPackageUid(HMS_PACKAGE_NAME)
-        callingUid == hmsUid || UserHandle.getAppId(callingUid) == UserHandle.getAppId(hmsUid)
+        callingUid == hmsUid || appId(callingUid) == appId(hmsUid)
     } catch (e: Throwable) {
         XLog.e(TAG, "fromHms: failed to resolve HMS uid", e)
         false
