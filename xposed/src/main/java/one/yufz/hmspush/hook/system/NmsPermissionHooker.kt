@@ -23,9 +23,19 @@ import one.yufz.xposed.hookMethod
 object NmsPermissionHooker {
     private const val TAG = "NmsPermissionHooker"
 
+    /**
+     * The notification manager is called from the HMS process, but the process
+     * can run in a secondary Android user.  In that case its Linux uid is, for
+     * example, 1010292 while getPackageUid(..., 0) returns 10292.  Comparing
+     * the complete uid makes the permission bypass silently not match and the
+     * framework then throws STATUS_BAR_SERVICE SecurityException.
+     */
     private fun fromHms() = try {
-        Binder.getCallingUid() == getPackageUid(HMS_PACKAGE_NAME)
+        val callingUid = Binder.getCallingUid()
+        val hmsUid = getPackageUid(HMS_PACKAGE_NAME)
+        callingUid == hmsUid || UserHandle.getAppId(callingUid) == UserHandle.getAppId(hmsUid)
     } catch (e: Throwable) {
+        XLog.e(TAG, "fromHms: failed to resolve HMS uid", e)
         false
     }
 
