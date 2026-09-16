@@ -7,7 +7,6 @@ import android.content.Context
 import android.os.Binder
 import android.os.Build
 import android.os.Process
-import android.os.UserHandle
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import de.robv.android.xposed.XposedHelpers.findClass
@@ -30,20 +29,31 @@ object NmsPermissionHooker {
      * the complete uid makes the permission bypass silently not match and the
      * framework then throws STATUS_BAR_SERVICE SecurityException.
      */
-    // UserHandle.getAppId() is hidden and is not available to the SDK compiler.
-    // Android reserves the lower 100000 UID values for the application id.
-    private fun appId(uid: Int): Int = uid % 100000
+    // Resolve HMS in the caller's user. Querying user 0 from a secondary-user
+    // Binder call triggers PackageManager's cross-user permission check.
+    private fun userId(uid: Int): Int = uid / 100000
 
-    private fun fromHms() = try {
+    private fun fromHms(): Boolean {
         val callingUid = Binder.getCallingUid()
-        val hmsUid = getPackageUid(HMS_PACKAGE_NAME)
-        callingUid == hmsUid || appId(callingUid) == appId(hmsUid)
-    } catch (e: Throwable) {
-        XLog.e(TAG, "fromHms: failed to resolve HMS uid", e)
-        false
+        return try {
+            // PackageManager is reached through Binder. Without clearing the
+            // identity it treats the original app (not system_server) as the
+            // caller and may reject the lookup as a cross-user operation.
+            val token = Binder.clearCallingIdentity()
+            val hmsUid = try {
+                getPackageUid(HMS_PACKAGE_NAME, userId(callingUid))
+            } finally {
+                Binder.restoreCallingIdentity(token)
+            }
+            callingUid == hmsUid
+        } catch (e: Throwable) {
+            XLog.e(TAG, "fromHms: failed to resolve HMS uid", e)
+            false
+        }
     }
 
-    private fun getPackageUid(packageName: String) = getContext().packageManager.getPackageUid(packageName, 0)
+    private fun getPackageUid(packageName: String, userId: Int = 0) =
+        getContext().packageManager.getPackageUidAsUser(packageName, userId)
 
     private fun getContext(): Context = AndroidAppHelper.currentApplication()
 
